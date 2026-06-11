@@ -46,12 +46,15 @@ html, body {
   gap: 34px;
 }
 
+/* NOTE: no `perspective` here on purpose. A 3D rendering context makes
+   Chromium drop .env-front's clip-path while the flap animates (the concave
+   notch becomes a flat rectangle painted over the letter). The flap fold is
+   faked in 2D with scaleY instead, which looks the same. */
 .envelope {
   position: relative;
   width: min(82vw, 430px);
   aspect-ratio: 1.5;
   cursor: pointer;
-  perspective: 900px;
   transition: transform 0.6s ease;
 }
 .envelope:not(.open):hover { transform: scale(1.04); }
@@ -64,6 +67,22 @@ html, body {
   border-radius: 8px;
   z-index: 1;
   box-shadow: 0 14px 34px rgba(120, 60, 70, 0.25);
+}
+
+/* The interior of the envelope mouth: a darker triangle with the same shape
+   as the flap. Hidden under the closed flap; revealed as the flap lifts, so
+   the opening keeps its concave look instead of becoming a flat rectangle. */
+.env-inside {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 54%;
+  background: linear-gradient(180deg, #b35f75, #c97488);
+  /* chamfered top corners; border-radius is avoided on clipped elements
+     because Chromium drops clip-path when both are present */
+  clip-path: polygon(0 6%, 2% 0, 98% 0, 100% 6%, 50% 100%);
+  z-index: 1; /* above .env-back (later in DOM), below the letter */
 }
 
 .letter {
@@ -151,17 +170,49 @@ html, body {
   50% { transform: scale(1.06); }
 }
 
+/* The pocket is built from three CONVEX-clipped pieces. A single concave
+   polygon (rectangle with a V notch) renders unclipped in some Chromium
+   configurations — exactly the "concave shape becomes a flat rectangle" bug.
+   Convex triangle clips (like the flap) are reliable, and the separate side
+   panels double as realistic envelope fold shading. */
 .env-front {
   position: absolute;
   inset: 0;
   z-index: 3;
-  background: linear-gradient(160deg, #f0a8b8, #e296a8);
-  border-radius: 0 0 8px 8px;
-  clip-path: polygon(0 0, 50% 52%, 100% 0, 100% 100%, 0 100%);
   pointer-events: none;
+}
+.pf-left {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 50%;
+  height: 52%;
+  background: #f2aabb;
+  clip-path: polygon(0 0, 100% 100%, 0 100%);
+}
+.pf-right {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 50%;
+  height: 52%;
+  background: #e89cae;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+.pf-bottom {
+  position: absolute;
+  left: 0;
+  top: 52%;
+  width: 100%;
+  height: 48%;
+  background: linear-gradient(180deg, #eca2b4, #e296a8);
+  clip-path: polygon(0 0, 100% 0, 100% 94%, 98% 100%, 2% 100%, 0 94%);
 }
 .envelope.revealed .env-front { opacity: 0.4; transition: opacity 0.6s; }
 
+/* The flap fold is two 2D halves: the front face squashes flat (scaleY 1→0,
+   like folding away from you), then the inner face grows upward above the
+   envelope (scaleY 0→1) to finish the fold. */
 .env-flap {
   position: absolute;
   top: 0;
@@ -170,16 +221,32 @@ html, body {
   height: 54%;
   z-index: 4;
   background: linear-gradient(200deg, #ea9fb1, #d97f95);
-  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  clip-path: polygon(0 6%, 2% 0, 98% 0, 100% 6%, 50% 100%);
   transform-origin: top center;
-  transform: rotateX(0deg);
-  /* z-index drops at ~90°, when the flap is edge-on and invisible,
-     so it never pops in front of / behind the letter mid-flight */
-  transition: transform 0.65s ease-in, z-index 0s 0.33s;
-  border-radius: 8px 8px 0 0;
+  transform: scaleY(1);
+  transition: transform 0.33s ease-in;
 }
-.envelope.open .env-flap { transform: rotateX(180deg); z-index: 1; }
-.envelope.revealed .env-flap { opacity: 0.4; transition: opacity 0.6s, transform 0.65s ease-in, z-index 0s; }
+.envelope.open .env-flap { transform: scaleY(0); }
+
+.env-flap-open {
+  position: absolute;
+  top: -54%;
+  left: 0;
+  width: 100%;
+  height: 54%;
+  z-index: 1;
+  background: linear-gradient(0deg, #c96f85, #db8094);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  transform: scaleY(0);
+  transform-origin: bottom center;
+  /* starts when the front face reaches 90° (0.65s ease-in midpoint ≈ 0.33s) */
+  transition: transform 0.32s ease-out 0.33s;
+}
+.envelope.open .env-flap-open { transform: scaleY(1); }
+.envelope.revealed .env-flap-open {
+  opacity: 0.4;
+  transition: opacity 0.6s, transform 0.32s ease-out 0.33s;
+}
 
 .seal {
   position: absolute;
