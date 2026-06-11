@@ -3,7 +3,7 @@
 
 import * as THREE from 'three';
 import { box, hitSphere } from './voxel.js';
-import { WORLD } from './world.js';
+import { WORLD, collide } from './world.js';
 
 const _v1 = new THREE.Vector3();
 
@@ -46,6 +46,8 @@ export class Fox {
     this.dead = false;
     this.target = null;
     this.retargetT = 0;
+    this.eatPause = 0;     // short "chewing" stop after a catch
+    this.carrying = false;
     this.moveDir = new THREE.Vector3();
     this.phase = Math.random() * 10;
   }
@@ -63,6 +65,8 @@ export class Fox {
   }
 
   carryChick() {
+    if (this.carrying) return;
+    this.carrying = true;
     // a sad little chick dangling from the mouth
     const chick = new THREE.Group();
     chick.add(box(0.3, 0.26, 0.3, '#f3e76f', { pos: [0, 0, 0], cast: false }));
@@ -71,41 +75,53 @@ export class Fox {
     this.head.add(chick);
   }
 
+  startLeaving() {
+    this.state = 'leave';
+    const pos = this.group.position;
+    this.moveDir.copy(pos).setY(0);
+    if (this.moveDir.lengthSq() < 1) this.moveDir.set(Math.random() - 0.5, 0, Math.random() - 0.5);
+    this.moveDir.normalize();
+  }
+
   update(dt, ctx) {
     const pos = this.group.position;
     let speed = 0;
 
     if (this.state === 'hunt') {
-      this.retargetT -= dt;
-      if (this.retargetT <= 0 || !this.target || this.target.removed) {
-        this.retargetT = 0.6;
-        this.target = null;
-        let best = Infinity;
-        for (const boba of ctx.bobas) {
-          const d = pos.distanceToSquared(boba.pos);
-          if (d < best) {
-            best = d;
-            this.target = boba;
+      // Foxes only hunt the player's flock. They keep hunting until tapped
+      // or until the player has no bobas left.
+      if (this.eatPause > 0) {
+        this.eatPause -= dt;
+      } else if (ctx.followers.length === 0) {
+        this.startLeaving();
+      } else {
+        this.retargetT -= dt;
+        if (this.retargetT <= 0 || !this.target || this.target.removed || this.target.state !== 'following') {
+          this.retargetT = 0.6;
+          this.target = null;
+          let best = Infinity;
+          for (const boba of ctx.followers) {
+            const d = pos.distanceToSquared(boba.pos);
+            if (d < best) {
+              best = d;
+              this.target = boba;
+            }
           }
         }
-      }
-      if (this.target) {
-        _v1.subVectors(this.target.pos, pos).setY(0);
-        const d = _v1.length();
-        // sneak from afar, pounce up close
-        speed = d > 20 ? 3 : d > 7 ? 5.2 : 6.6;
-        this.moveDir.copy(_v1.normalize());
-        if (d < 0.95) {
-          ctx.onEat(this.target);
-          this.carryChick();
-          this.state = 'leave';
-          this.moveDir.copy(pos).setY(0);
-          if (this.moveDir.lengthSq() < 1) this.moveDir.set(Math.random() - 0.5, 0, Math.random() - 0.5);
-          this.moveDir.normalize();
+        if (this.target) {
+          _v1.subVectors(this.target.pos, pos).setY(0);
+          const d = _v1.length();
+          // sneak from afar, pounce up close
+          speed = d > 20 ? 3 : d > 7 ? 5.2 : 6.6;
+          this.moveDir.copy(_v1.normalize());
+          if (d < 0.95) {
+            ctx.onEat(this.target);
+            this.carryChick();
+            this.target = null;
+            this.eatPause = 0.9;
+            speed = 0;
+          }
         }
-      } else {
-        speed = 1.5; // no bobas left to hunt: mope toward the edge
-        if (this.moveDir.lengthSq() < 0.01) this.moveDir.set(Math.random() - 0.5, 0, Math.random() - 0.5).normalize();
       }
     } else if (this.state === 'leave') {
       speed = 6.5;
@@ -114,6 +130,7 @@ export class Fox {
     }
 
     pos.addScaledVector(this.moveDir, speed * dt);
+    collide(pos, 0.55);
     if (Math.abs(pos.x) > WORLD.BOUND + 10 || Math.abs(pos.z) > WORLD.BOUND + 10) {
       this.dead = true;
     }

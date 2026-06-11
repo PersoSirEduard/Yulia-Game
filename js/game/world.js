@@ -10,6 +10,50 @@ export const WORLD = {
   HOUSE_RADIUS: 8,       // "you're home" distance
 };
 
+// Solid things characters can't walk through: circles (tree trunks)
+// and axis-aligned boxes (the house).
+export const colliders = [];
+
+// Push `pos` out of any collider it overlaps. The push is perpendicular to
+// the surface, so movement along it keeps its tangential component and
+// characters slide around obstacles instead of sticking to them.
+export function collide(pos, radius) {
+  for (const c of colliders) {
+    if (c.r !== undefined) {
+      const dx = pos.x - c.x;
+      const dz = pos.z - c.z;
+      const d = Math.hypot(dx, dz);
+      const min = c.r + radius;
+      if (d < min) {
+        if (d > 1e-4) {
+          pos.x = c.x + (dx / d) * min;
+          pos.z = c.z + (dz / d) * min;
+        } else {
+          pos.x = c.x + min;
+        }
+      }
+    } else {
+      const nx = Math.max(c.x - c.hx, Math.min(pos.x, c.x + c.hx));
+      const nz = Math.max(c.z - c.hz, Math.min(pos.z, c.z + c.hz));
+      const dx = pos.x - nx;
+      const dz = pos.z - nz;
+      const d = Math.hypot(dx, dz);
+      if (d < radius) {
+        if (d > 1e-4) {
+          pos.x = nx + (dx / d) * radius;
+          pos.z = nz + (dz / d) * radius;
+        } else {
+          // center is inside the box: exit along the shallowest axis
+          const px = c.hx + radius - Math.abs(pos.x - c.x);
+          const pz = c.hz + radius - Math.abs(pos.z - c.z);
+          if (px < pz) pos.x = c.x + Math.sign(pos.x - c.x || 1) * (c.hx + radius);
+          else pos.z = c.z + Math.sign(pos.z - c.z || 1) * (c.hz + radius);
+        }
+      }
+    }
+  }
+}
+
 function makeGrassTexture() {
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = 64;
@@ -62,6 +106,7 @@ function addTree(scene, x, z) {
   tree.position.set(x, 0, z);
   tree.rotation.y = Math.random() * Math.PI;
   scene.add(tree);
+  colliders.push({ x, z, r: 0.85 });
 }
 
 function addFlower(scene, x, z) {
@@ -89,14 +134,16 @@ function buildHouse(scene) {
   house.add(box(1.7, 1.7, 0.35, '#bfe8ff', { pos: [2.8, 2.8, 3.45], cast: false }));
   // little chimney with a heart-pink top
   house.add(box(1, 2.2, 1, '#e87fae', { pos: [3, 7.4, -1.5] }));
-  // sign: BOBA FARM
+  // sign: BOBA FARM (text on the front face only, plain wood elsewhere)
   const sign = new THREE.Group();
   sign.add(box(0.25, 1.8, 0.25, '#7a5230', { pos: [0, 0.9, 0] }));
+  const wood = new THREE.MeshLambertMaterial({ color: '#9a6b3f' });
+  const face = new THREE.MeshLambertMaterial({ map: makeSignTexture() });
   const board = new THREE.Mesh(
     new THREE.BoxGeometry(3.4, 1.7, 0.2),
-    new THREE.MeshLambertMaterial({ map: makeSignTexture() })
+    [wood, wood, wood, wood, face, wood] // +x, -x, +y, -y, +z (front), -z
   );
-  board.position.set(0, 2.2, 0);
+  board.position.set(0, 2.2, 0.24); // in front of the post, no intersection
   board.castShadow = true;
   sign.add(board);
   sign.position.set(6.4, 0, 3.2);
@@ -104,6 +151,12 @@ function buildHouse(scene) {
 
   house.position.copy(WORLD.HOUSE_POS);
   scene.add(house);
+  colliders.push({
+    x: WORLD.HOUSE_POS.x,
+    z: WORLD.HOUSE_POS.z,
+    hx: 4.7,
+    hz: 3.7,
+  });
 }
 
 export function buildWorld(scene) {

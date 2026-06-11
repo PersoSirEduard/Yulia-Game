@@ -3,7 +3,7 @@
 
 import * as THREE from 'three';
 import { box, hitSphere } from './voxel.js';
-import { WORLD } from './world.js';
+import { WORLD, collide } from './world.js';
 
 const _v1 = new THREE.Vector3();
 const _v2 = new THREE.Vector3();
@@ -52,25 +52,34 @@ export class Boba {
     const pos = this.group.position;
 
     if (this.state === 'wild') {
-      this.wanderT -= dt;
-      if (this.wanderT <= 0) {
-        this.wanderT = 1.5 + Math.random() * 3;
-        this.wanderTarget.set(
-          THREE.MathUtils.clamp(pos.x + (Math.random() * 12 - 6), -WORLD.BOUND, WORLD.BOUND),
-          0,
-          THREE.MathUtils.clamp(pos.z + (Math.random() * 12 - 6), -WORLD.BOUND, WORLD.BOUND)
-        );
-      }
-      _v1.subVectors(this.wanderTarget, pos).setY(0);
-      if (_v1.length() > 0.4) {
-        this.vel.copy(_v1.normalize().multiplyScalar(1.3));
+      // skittish: run from the penguin when it gets close (slower than the
+      // player, so you can corner one and tap it)
+      _v1.subVectors(pos, ctx.penguinPos).setY(0);
+      const dPenguin = _v1.length();
+      if (dPenguin < 5.5) {
+        this.vel.copy(_v1.normalize().multiplyScalar(4.2));
+        this.wanderT = 0.5 + Math.random(); // re-pick a wander spot after escaping
       } else {
-        this.vel.set(0, 0, 0);
-        // peck the ground while idle
-        this.peckT -= dt;
-        if (this.peckT <= 0) {
-          this.peckT = 2 + Math.random() * 4;
-          this.peckAnim = 0.5;
+        this.wanderT -= dt;
+        if (this.wanderT <= 0) {
+          this.wanderT = 1.5 + Math.random() * 3;
+          this.wanderTarget.set(
+            THREE.MathUtils.clamp(pos.x + (Math.random() * 12 - 6), -WORLD.BOUND, WORLD.BOUND),
+            0,
+            THREE.MathUtils.clamp(pos.z + (Math.random() * 12 - 6), -WORLD.BOUND, WORLD.BOUND)
+          );
+        }
+        _v1.subVectors(this.wanderTarget, pos).setY(0);
+        if (_v1.length() > 0.4) {
+          this.vel.copy(_v1.normalize().multiplyScalar(1.3));
+        } else {
+          this.vel.set(0, 0, 0);
+          // peck the ground while idle
+          this.peckT -= dt;
+          if (this.peckT <= 0) {
+            this.peckT = 2 + Math.random() * 4;
+            this.peckAnim = 0.5;
+          }
         }
       }
     } else {
@@ -100,6 +109,7 @@ export class Boba {
     pos.addScaledVector(this.vel, dt);
     pos.x = THREE.MathUtils.clamp(pos.x, -WORLD.BOUND, WORLD.BOUND);
     pos.z = THREE.MathUtils.clamp(pos.z, -WORLD.BOUND, WORLD.BOUND);
+    collide(pos, 0.3);
 
     // hop + face direction of travel
     const speed = Math.hypot(this.vel.x, this.vel.z);

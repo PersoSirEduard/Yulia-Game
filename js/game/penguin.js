@@ -24,10 +24,14 @@ export function createPenguin() {
   head.add(box(0.32, 0.2, 0.45, '#f29a2e', { pos: [0, -0.12, 0.6] }));      // beak
   torso.add(head);
 
-  const flipL = box(0.18, 0.95, 0.5, '#22262e', { pos: [-0.78, 1.15, 0] });
-  const flipR = box(0.18, 0.95, 0.5, '#22262e', { pos: [0.78, 1.15, 0] });
-  flipL.rotation.z = 0.15;
-  flipR.rotation.z = -0.15;
+  // flippers pivot at the shoulder so they flap outward and follow the
+  // torso's waddle (they're children of the tilting torso)
+  const flipL = new THREE.Group();
+  flipL.position.set(-0.68, 1.72, 0);
+  flipL.add(box(0.18, 0.95, 0.5, '#22262e', { pos: [-0.06, -0.42, 0] }));
+  const flipR = new THREE.Group();
+  flipR.position.set(0.68, 1.72, 0);
+  flipR.add(box(0.18, 0.95, 0.5, '#22262e', { pos: [0.06, -0.42, 0] }));
   torso.add(flipL, flipR);
 
   const hit = hitSphere(1.6, 1.2, null);
@@ -57,8 +61,9 @@ export function createPenguin() {
       torso.position.y = Math.abs(Math.sin(walkTime)) * 0.1 * moveAmount;
       footL.position.z = 0.1 + Math.sin(walkTime) * 0.3 * moveAmount;
       footR.position.z = 0.1 - Math.sin(walkTime) * 0.3 * moveAmount;
-      flipL.rotation.z = 0.15 + wob * 0.35;
-      flipR.rotation.z = -0.15 + wob * 0.35;
+      const flap = (0.1 + Math.abs(Math.sin(walkTime)) * 0.5) * moveAmount;
+      flipL.rotation.z = -(0.1 + flap); // negative z swings the left arm outward
+      flipR.rotation.z = 0.1 + flap;
       head.rotation.z = -wob * 0.08;
     },
   };

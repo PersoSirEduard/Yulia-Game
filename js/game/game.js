@@ -4,7 +4,7 @@
 import * as THREE from 'three';
 import { CONFIG } from '../config.js';
 import { startHearts } from '../hearts.js';
-import { WORLD, buildWorld } from './world.js';
+import { WORLD, buildWorld, collide } from './world.js';
 import { createPenguin } from './penguin.js';
 import { Boba } from './boba.js';
 import { Fox } from './fox.js';
@@ -291,6 +291,7 @@ export function startGame() {
       p.x = THREE.MathUtils.clamp(p.x, -WORLD.BOUND, WORLD.BOUND);
       p.z = THREE.MathUtils.clamp(p.z, -WORLD.BOUND, WORLD.BOUND);
     }
+    collide(penguin.group.position, 0.75);
     penguin.update(dt, amount, moveDir);
 
     // --- camera follow ---
@@ -302,7 +303,6 @@ export function startGame() {
     const ctx = {
       penguinPos: penguin.group.position,
       followers,
-      bobas: wild.concat(followers),
       onEat: onBobaEaten,
     };
     for (const boba of wild) boba.update(dt, ctx);
@@ -323,11 +323,11 @@ export function startGame() {
         spawnWildBoba();
       }
     }
-    const maxFoxes = Math.min(3, 1 + Math.floor(followers.length / 15));
-    if (!won && followers.length >= 3 && foxes.length < maxFoxes) {
+    // up to 3 foxes at once; they spawn faster the bigger your flock gets
+    if (!won && followers.length >= 3 && foxes.length < 3) {
       foxSpawnT -= dt;
       if (foxSpawnT <= 0) {
-        foxSpawnT = 10 + Math.random() * 10;
+        foxSpawnT = (10 + Math.random() * 8) * (12 / (12 + followers.length));
         spawnFox();
       }
     }
@@ -358,7 +358,7 @@ export function startGame() {
     let nearestFox = null;
     let bestF = Infinity;
     for (const fox of foxes) {
-      if (fox.state === 'flee') continue;
+      if (fox.state !== 'hunt') continue;
       const d = distXZ(fox.pos, penguin.group.position);
       if (d < bestF) {
         bestF = d;

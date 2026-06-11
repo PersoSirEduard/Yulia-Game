@@ -7,9 +7,11 @@ A two-stage gift game for web and mobile (touch + mouse):
    into a card with a personal message and a 🎁 button.
 2. **The Game** — a 3D Minecraft-style voxel world. You play a Pingu-inspired
    penguin (on-screen mini joystick, or WASD/arrows on desktop) and must
-   collect **50 wild bobas** (baby chicks) by tapping them. Collected bobas
-   follow you around as a little boid flock. **Foxes** sneak in from the edges
-   of the map to hunt your bobas — tap a fox to scare it off the map. Once you
+   collect **50 wild bobas** (baby chicks) by tapping them — they're skittish
+   and run from you, but you're faster. Collected bobas follow you around as a
+   little boid flock. **Foxes** (up to 3 at once, spawning faster the bigger
+   your flock) sneak in from the edges of the map to hunt your flock, and only
+   retreat when you tap them or your flock is gone. Once you
    have all 50, bring the flock back to the pink **Boba Farm** house at the
    spawn point to win. A compass around the middle of the screen points to the
    nearest wild boba 🐤, the nearest fox 🦊⚠️ and the farm 🏠, with distances.
