@@ -34,4 +34,29 @@ I love you more than all the bobas in the world. 💕
 just like you found your way into my heart.
 
 I love you, Yulia. Forever your penguin. 🐧💖`,
+
+  // ---- every other text in the game ----
+  ui: {
+    // stage 1
+    openHint: 'Tap the envelope to open it ✨',
+    loadingGift: 'Loading your gift… 🐧',
+
+    // in-game banners ({goal} is replaced with bobaGoal)
+    bannerMove: 'Waddle around with the joystick 🕹️🐧',
+    bannerCollect: 'Tap wild bobas to befriend them — collect {goal}! 🐤',
+    bannerFox: '⚠️ A fox is hunting your bobas! Tap it to scare it away! 🦊',
+    bannerGoal: 'All {goal} bobas! Bring them home to the Boba Farm! 🏠💕',
+
+    // HUD
+    counterIcon: '🐤',          // shown before "12/50"
+    distanceUnit: 'm',          // suffix on compass distances
+
+    // the wooden sign next to the house (two short lines)
+    signTop: 'BOBA',
+    signBottom: 'FARM',
+
+    // win screen
+    winEmoji: '🐧💕🐤',
+    replayButton: 'Play again 💕',
+  },
 };

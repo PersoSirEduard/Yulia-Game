@@ -1,6 +1,7 @@
 // The voxel island: grass, trees, flowers, fence and the pink Boba Farm house.
 
 import * as THREE from 'three';
+import { CONFIG } from '../config.js';
 import { box } from './voxel.js';
 
 export const WORLD = {
@@ -90,8 +91,8 @@ function makeSignTexture() {
   ctx.font = 'bold 42px monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('BOBA', 128, 42);
-  ctx.fillText('FARM', 128, 88);
+  ctx.fillText(CONFIG.ui.signTop, 128, 42);
+  ctx.fillText(CONFIG.ui.signBottom, 128, 88);
   const tex = new THREE.CanvasTexture(canvas);
   tex.magFilter = THREE.NearestFilter;
   tex.minFilter = THREE.NearestFilter;

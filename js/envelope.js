@@ -10,6 +10,7 @@ export function initEnvelope({ onGift }) {
   document.getElementById('letter-title').textContent = CONFIG.letterTitle;
   document.getElementById('letter-message').textContent = CONFIG.letterMessage;
   giftBtn.textContent = CONFIG.giftButtonText;
+  hint.textContent = CONFIG.ui.openHint;
 
   let opened = false;
   let gifted = false;
@@ -27,7 +28,7 @@ export function initEnvelope({ onGift }) {
     e.stopPropagation();
     if (gifted || !envelope.classList.contains('revealed')) return;
     gifted = true;
-    giftBtn.textContent = 'Loading your gift… 🐧';
+    giftBtn.textContent = CONFIG.ui.loadingGift;
     onGift();
   });
 }

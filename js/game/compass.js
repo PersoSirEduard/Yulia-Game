@@ -1,6 +1,8 @@
 // HUD compass: indicators orbiting the center of the screen, pointing at the
 // nearest wild boba, the nearest fox (with a warning badge), and the Boba Farm.
 
+import { CONFIG } from '../config.js';
+
 export class Compass {
   constructor(container) {
     this.items = {
@@ -50,7 +52,7 @@ export class Compass {
       const ny = dz / dist;
       item.el.style.transform = `translate(${nx * radius}px, ${ny * radius}px)`;
       item.rotor.style.transform = `rotate(${Math.atan2(nx, -ny) * 180 / Math.PI}deg)`;
-      item.dist.textContent = `${Math.round(dist)}m`;
+      item.dist.textContent = `${Math.round(dist)}${CONFIG.ui.distanceUnit}`;
     }
     this.items.house.el.classList.toggle('pulse', !!houseReady);
   }

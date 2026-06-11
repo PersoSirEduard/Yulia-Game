@@ -91,16 +91,18 @@ export function startGame() {
     bannerTimeout = setTimeout(() => bannerEl.classList.remove('show'), ms);
   }
 
+  const text = (key) => CONFIG.ui[key].replaceAll('{goal}', goal);
+
   function updateCounter() {
-    counterEl.textContent = `🐤 ${followers.length}/${goal}`;
+    counterEl.textContent = `${CONFIG.ui.counterIcon} ${followers.length}/${goal}`;
     counterEl.classList.remove('pop');
     void counterEl.offsetWidth;
     counterEl.classList.add('pop');
   }
   updateCounter();
 
-  showBanner('Waddle around with the joystick 🕹️🐧', 3600);
-  setTimeout(() => showBanner(`Tap wild bobas to befriend them — collect ${goal}! 🐤`, 4500), 4000);
+  showBanner(text('bannerMove'), 3600);
+  setTimeout(() => showBanner(text('bannerCollect'), 4500), 4000);
 
   // ---------- keyboard (desktop bonus) ----------
   const keys = {};
@@ -142,7 +144,7 @@ export function startGame() {
     foxes.push(fox);
     if (!foxAnnounced) {
       foxAnnounced = true;
-      showBanner('⚠️ A fox is hunting your bobas! Tap it to scare it away! 🦊', 5000);
+      showBanner(text('bannerFox'), 5000);
     }
   }
 
@@ -157,7 +159,7 @@ export function startGame() {
     if (followers.length >= goal && !goalAnnounced) {
       goalAnnounced = true;
       sfx.goal();
-      showBanner(`All ${goal} bobas! Bring them home to the Boba Farm! 🏠💕`, 6000);
+      showBanner(text('bannerGoal'), 6000);
     }
   }
 
@@ -251,6 +253,8 @@ export function startGame() {
     sfx.win();
     document.getElementById('win-title').textContent = CONFIG.winTitle;
     document.getElementById('win-message').textContent = CONFIG.winMessage;
+    document.getElementById('win-emoji').textContent = CONFIG.ui.winEmoji;
+    document.getElementById('replay-btn').textContent = CONFIG.ui.replayButton;
     document.getElementById('win-overlay').classList.remove('hidden');
     startHearts(document.getElementById('win-hearts'), 1.4);
   }

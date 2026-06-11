@@ -23,7 +23,10 @@ vendored in `vendor/`, so it even works offline once loaded.
 
 Everything she will read lives in **`js/config.js`**: her name, the letter
 title and message, the gift button text, the win-screen message, and the boba
-goal (50 by default). Edit that one file and you're done.
+goal (50 by default). The `ui` section holds every other string in the game —
+tutorial banners, the fox warning, the HUD counter icon, compass distance
+unit, the wooden sign by the house, and the win screen's emoji and replay
+button. Edit that one file and you're done.
 
 ## ▶️ Run locally
 

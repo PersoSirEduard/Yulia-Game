@@ -82,7 +82,7 @@ html, body {
               z-index 0s 0.9s;
   overflow: hidden;
 }
-.envelope.letter-out .letter { transform: translateY(-62%); }
+.envelope.letter-out .letter { transform: translateY(-38%); }
 /* On reveal the letter grows into a real card centered on the envelope. */
 .envelope.revealed .letter {
   left: 50%;
@@ -92,6 +92,12 @@ html, body {
   transform: translate(-50%, 50%);
   z-index: 6;
   box-shadow: 0 14px 40px rgba(120, 60, 70, 0.3);
+  /* same transition but with the z-index raise immediate, so the growing
+     card is never painted behind the envelope pocket */
+  transition: transform 0.9s cubic-bezier(.34, 1.2, .5, 1),
+              left 0.9s ease, bottom 0.9s ease,
+              width 0.9s ease, height 0.9s ease,
+              z-index 0s;
 }
 
 .letter-content {
@@ -167,7 +173,9 @@ html, body {
   clip-path: polygon(0 0, 100% 0, 50% 100%);
   transform-origin: top center;
   transform: rotateX(0deg);
-  transition: transform 0.65s ease-in, z-index 0s 0.65s;
+  /* z-index drops at ~90°, when the flap is edge-on and invisible,
+     so it never pops in front of / behind the letter mid-flight */
+  transition: transform 0.65s ease-in, z-index 0s 0.33s;
   border-radius: 8px 8px 0 0;
 }
 .envelope.open .env-flap { transform: rotateX(180deg); z-index: 1; }
