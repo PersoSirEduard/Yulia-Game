@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#f5e6d3">
+  <title>A gift for you 💌</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐧</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="modulepreload" href="vendor/three.module.min.js">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three.module.min.js"
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ============ STAGE 1 : THE LETTER ============ -->
+  <div id="stage1">
+    <canvas id="hearts-canvas"></canvas>
+    <div class="envelope-scene">
+      <div class="envelope" id="envelope">
+        <div class="env-back"></div>
+        <div class="letter" id="letter">
+          <div class="letter-content" id="letter-content">
+            <h1 id="letter-title"></h1>
+            <p id="letter-message"></p>
+            <button id="gift-btn"></button>
+          </div>
+        </div>
+        <div class="env-front"></div>
+        <div class="env-flap"></div>
+        <div class="seal">❤</div>
+      </div>
+      <p class="hint" id="open-hint">Tap the envelope to open it ✨</p>
+    </div>
+  </div>
+
+  <!-- ============ STAGE 2 : THE GAME ============ -->
+  <div id="stage2" class="hidden">
+    <div id="game-container"></div>
+    <div id="hud">
+      <div id="boba-counter">🐤 0/50</div>
+      <button id="mute-btn">🔊</button>
+      <div id="banner"></div>
+      <div id="compass"></div>
+      <div id="joystick-zone">
+        <div id="joystick-knob"></div>
+      </div>
+    </div>
+    <div id="win-overlay" class="hidden">
+      <canvas id="win-hearts"></canvas>
+      <div class="win-card">
+        <div class="win-emoji">🐧💕🐤</div>
+        <h1 id="win-title"></h1>
+        <p id="win-message"></p>
+        <button id="replay-btn">Play again 💕</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
