@@ -20,8 +20,10 @@ const CAM_OFFSET = new THREE.Vector3(0, 23, 17);
 export function startGame() {
   // ---------- renderer / scene / camera ----------
   const container = document.getElementById('game-container');
-  const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(0.5); // chunky low-res buffer + CSS image-rendering:pixelated = Minecraft vibes
+  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  // Native-res rendering keeps edges sharp; the Minecraft look comes from the
+  // blocky geometry and nearest-filtered textures, not a low-res framebuffer.
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(window.innerWidth, window.innerHeight, false);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.BasicShadowMap;
