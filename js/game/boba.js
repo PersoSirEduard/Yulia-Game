@@ -82,6 +82,15 @@ export class Boba {
           }
         }
       }
+    } else if (this.state === 'entering') {
+      // finale: march to an assigned point (set by the cinematic), ignoring
+      // the house collider so it can walk through the doorway
+      _v1.subVectors(this.enterTarget, pos).setY(0);
+      if (_v1.length() > 0.35) {
+        this.vel.copy(_v1.normalize().multiplyScalar(7.5));
+      } else {
+        this.vel.set(0, 0, 0);
+      }
     } else {
       // boid follow: seek the penguin, separate from flock-mates
       _v1.subVectors(ctx.penguinPos, pos).setY(0);
@@ -109,7 +118,7 @@ export class Boba {
     pos.addScaledVector(this.vel, dt);
     pos.x = THREE.MathUtils.clamp(pos.x, -WORLD.BOUND, WORLD.BOUND);
     pos.z = THREE.MathUtils.clamp(pos.z, -WORLD.BOUND, WORLD.BOUND);
-    collide(pos, 0.3);
+    if (this.state !== 'entering') collide(pos, 0.3);
 
     // hop + face direction of travel
     const speed = Math.hypot(this.vel.x, this.vel.z);

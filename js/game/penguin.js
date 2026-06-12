@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { box, hitSphere } from './voxel.js';
 
-export function createPenguin() {
+export function createPenguin(opts = {}) {
   const group = new THREE.Group();
   const torso = new THREE.Group();
   group.add(torso);
@@ -22,6 +22,12 @@ export function createPenguin() {
   head.add(box(0.08, 0.12, 0.05, '#101014', { pos: [-0.22, 0.08, 0.52] }));
   head.add(box(0.08, 0.12, 0.05, '#101014', { pos: [0.22, 0.08, 0.52] }));
   head.add(box(0.32, 0.2, 0.45, '#f29a2e', { pos: [0, -0.12, 0.6] }));      // beak
+  if (opts.bow) {
+    // a pink bow for the sweetheart penguin
+    head.add(box(0.14, 0.14, 0.14, '#d6477b', { pos: [0.3, 0.49, 0], cast: false }));
+    head.add(box(0.24, 0.2, 0.16, '#f06292', { pos: [0.12, 0.52, 0], cast: false }));
+    head.add(box(0.24, 0.2, 0.16, '#f06292', { pos: [0.48, 0.52, 0], cast: false }));
+  }
   torso.add(head);
 
   // flippers pivot at the shoulder so they flap outward and follow the
@@ -65,6 +71,13 @@ export function createPenguin() {
       flipL.rotation.z = -(0.1 + flap); // negative z swings the left arm outward
       flipR.rotation.z = 0.1 + flap;
       head.rotation.z = -wob * 0.08;
+    },
+    // cinematic helpers: turn toward a point, lean forward (for the kiss)
+    face(point) {
+      targetYaw = Math.atan2(point.x - group.position.x, point.z - group.position.z);
+    },
+    lean(amount) {
+      torso.rotation.x = amount;
     },
   };
   hit.userData.owner = penguin;

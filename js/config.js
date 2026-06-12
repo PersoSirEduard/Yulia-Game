@@ -47,6 +47,7 @@ I love you, Yulia. Forever your penguin. 🐧💖`,
     bannerFox: '⚠️ A fox is hunting your bobas! Tap it to scare it away! 🦊',
     bannerGoal: 'All {goal} bobas! Bring them home to the Boba Farm! 🏠💕',
     bannerCat: '🐱 You found Theo the cat! He will pounce on the next fox that gets too close 💕',
+    bannerHome: '🏠 Welcome home! Everyone inside! 🐤',
 
     // HUD
     counterIcon: '🐤',          // shown before "12/50"

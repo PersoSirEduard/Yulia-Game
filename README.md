@@ -16,7 +16,9 @@ A two-stage gift game for web and mobile (touch + mouse):
    he's a secret): tap him and he follows you, then pounces on the next fox
    that gets too close and chases it off the map. Once you
    have all 50, bring the flock back to the pink **Boba Farm** house at the
-   spawn point to win. A compass around the middle of the screen points to the
+   spawn point — a little finale plays out: the door opens, the bobas hop
+   inside one by one, and a second penguin comes out for a kiss before the
+   win screen. A compass around the middle of the screen points to the
    nearest wild boba 🐤, the nearest fox 🦊⚠️ and the farm 🏠, with distances.
 
 No build step, no server-side code — it's a fully static site. Three.js is

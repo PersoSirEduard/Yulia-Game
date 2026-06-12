@@ -49,6 +49,19 @@ class Sfx {
     this.tone(820, 0.14, { type: 'triangle', slideTo: 1250, vol: 0.13 });
     this.tone(1250, 0.22, { type: 'triangle', slideTo: 650, vol: 0.1, delay: 0.13 });
   }
+  door() {
+    this.tone(140, 0.6, { type: 'sawtooth', slideTo: 320, vol: 0.05 });
+  }
+  // a cute rising pentatonic note per boba entering the farm
+  parade(i) {
+    const notes = [659, 740, 880, 988, 1109];
+    this.tone(notes[i % notes.length], 0.07, { vol: 0.06 });
+  }
+  kiss() {
+    this.tone(1500, 0.08, { type: 'sine', slideTo: 900, vol: 0.12 });
+    this.tone(900, 0.12, { type: 'sine', slideTo: 1400, vol: 0.1, delay: 0.09 });
+    [1319, 1568, 2093].forEach((f, i) => this.tone(f, 0.16, { vol: 0.08, delay: 0.25 + i * 0.09 }));
+  }
   win() {
     [523, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, 0.18, { delay: i * 0.13, vol: 0.14 }));
   }

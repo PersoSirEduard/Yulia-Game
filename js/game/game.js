@@ -48,7 +48,7 @@ export function startGame() {
   sc.far = 200;
   scene.add(sun);
 
-  buildWorld(scene);
+  const { doorPivot } = buildWorld(scene);
 
   const penguin = createPenguin();
   penguin.group.position.copy(WORLD.SPAWN_POS);
@@ -70,6 +70,7 @@ export function startGame() {
   let foxAnnounced = false;
   let catAnnounced = false;
   let won = false;
+  let cine = null; // finale cinematic state
 
   // ---------- HUD ----------
   const counterEl = document.getElementById('boba-counter');
@@ -201,7 +202,7 @@ export function startGame() {
   });
 
   renderer.domElement.addEventListener('pointerup', (e) => {
-    if (won) return;
+    if (won || cine) return;
     if (Math.hypot(e.clientX - downX, e.clientY - downY) > 14) return;
     if (performance.now() - downTime > 450) return;
 
@@ -269,6 +270,143 @@ export function startGame() {
     }
   }
 
+  // ---------- finale cinematic ----------
+  // Everything is staged on the FRONT (+Z) side of the house: the walk-up
+  // spot, the door, the boba parade and the kiss all happen at z > house
+  // front face, and the camera shoots the facade from out front.
+  const DOOR_POS = new THREE.Vector3(0, 0, -8.55);     // doorway, world space
+  const DOOR_FRONT = new THREE.Vector3(0, 0, -6.5);    // queue point outside
+  const DOOR_INSIDE = new THREE.Vector3(0, 0, -9.6);   // into the dark
+  const CINE_SPOT = new THREE.Vector3(2.6, 0, -3.4);   // where our penguin watches
+  const KISS_SPOT = new THREE.Vector3(0.2, 0, -3.4);   // partner stops here
+
+  function startCinematic() {
+    const route = [];
+    // if the penguin is beside/behind the house, swing around the near side
+    // first so the walk-up always arrives from the front
+    if (penguin.group.position.z < -7.5) {
+      route.push(new THREE.Vector3(penguin.group.position.x >= 0 ? 8.5 : -8.5, 0, -3));
+    }
+    route.push(CINE_SPOT);
+    cine = {
+      phase: 'walk',
+      t: 0,
+      route,
+      queue: followers.slice(),  // bobas waiting to go inside
+      entering: [],
+      launchT: 0,
+      launched: 0,
+      heartT: 0,
+      partner: null,
+      partnerStage: 0,           // 0: step out the door, 1: walk to the kiss spot
+    };
+    for (const fox of foxes) if (fox.state === 'hunt') fox.startLeaving();
+    document.getElementById('joystick-zone').style.display = 'none';
+    document.getElementById('compass').style.display = 'none';
+    showBanner(text('bannerHome'), 4000);
+  }
+
+  const cineMove = new THREE.Vector3();
+  let cineAmount = 0;
+  const _mid = new THREE.Vector3();
+
+  function updateCinematic(dt) {
+    cine.t += dt;
+    cineMove.set(0, 0, 0);
+    cineAmount = 0;
+
+    if (cine.phase === 'walk') {
+      const target = cine.route[0];
+      _mid.subVectors(target, penguin.group.position).setY(0);
+      if (_mid.length() > 0.4 && cine.t < 8) {
+        cineMove.copy(_mid.normalize());
+        cineAmount = 0.85;
+      } else {
+        cine.route.shift();
+        if (cine.route.length === 0 || cine.t >= 8) {
+          penguin.face(DOOR_POS);
+          cine.phase = 'door';
+          cine.t = 0;
+          sfx.door();
+        }
+      }
+    } else if (cine.phase === 'door') {
+      doorPivot.rotation.y = -Math.min(1, cine.t / 0.9) * 2.0; // swing outward
+      if (cine.t > 1.2) {
+        cine.phase = 'bobas';
+        cine.t = 0;
+      }
+    } else if (cine.phase === 'bobas') {
+      // launch the flock through the door one by one, speeding up a little
+      cine.launchT -= dt;
+      if (cine.launchT <= 0 && cine.queue.length) {
+        cine.launchT = Math.max(0.08, 0.18 - cine.launched * 0.002);
+        cine.launched++;
+        const boba = cine.queue.shift();
+        followers.splice(followers.indexOf(boba), 1);
+        boba.state = 'entering';
+        boba.enterTarget = DOOR_FRONT.clone();
+        cine.entering.push(boba);
+        sfx.parade(cine.launched);
+      }
+      for (let i = cine.entering.length - 1; i >= 0; i--) {
+        const boba = cine.entering[i];
+        if (boba.pos.distanceTo(boba.enterTarget) < 0.6) {
+          boba.enterTarget = DOOR_INSIDE; // reached the queue point: head inside
+        }
+        if (boba.pos.z < -8.55) {
+          boba.removed = true;
+          scene.remove(boba.group);
+          cine.entering.splice(i, 1);
+        }
+      }
+      if (!cine.queue.length && !cine.entering.length) {
+        cine.phase = 'partner';
+        cine.t = 0;
+        cine.partner = createPenguin({ bow: true });
+        cine.partner.group.scale.setScalar(0.95);
+        cine.partner.group.position.copy(DOOR_INSIDE);
+        cine.partner.group.rotation.y = 0; // facing +Z, out the door
+        scene.add(cine.partner.group);
+      }
+    } else if (cine.phase === 'partner') {
+      const target = cine.partnerStage === 0 ? DOOR_FRONT : KISS_SPOT;
+      _mid.subVectors(target, cine.partner.group.position).setY(0);
+      const d = _mid.length();
+      if (d > 0.35) {
+        _mid.normalize();
+        cine.partner.group.position.addScaledVector(_mid, 5.5 * dt);
+        cine.partner.update(dt, 0.85, _mid);
+        penguin.face(cine.partner.group.position);
+      } else if (cine.partnerStage === 0) {
+        cine.partnerStage = 1; // out the door — now head to the sweetheart
+      } else {
+        cine.partner.face(penguin.group.position);
+        penguin.face(cine.partner.group.position);
+        cine.phase = 'kiss';
+        cine.t = 0;
+        sfx.kiss();
+      }
+    } else if (cine.phase === 'kiss') {
+      const lean = 0.22 * Math.min(1, cine.t / 0.6);
+      penguin.lean(lean);
+      cine.partner.lean(lean);
+      cine.partner.update(dt, 0, _mid.set(0, 0, 0));
+      doorPivot.rotation.y = -Math.max(0, 2.0 - cine.t * 1.5); // door drifts shut
+      cine.heartT -= dt;
+      if (cine.heartT <= 0) {
+        cine.heartT = 0.28;
+        _mid.addVectors(penguin.group.position, cine.partner.group.position).multiplyScalar(0.5);
+        _mid.y = 0.8;
+        heartBurst(_mid, 2);
+      }
+      if (cine.t > 3) {
+        cine.phase = 'end';
+        win();
+      }
+    }
+  }
+
   // ---------- win ----------
   function win() {
     won = true;
@@ -289,27 +427,39 @@ export function startGame() {
   });
 
   // debug/testing handle (not used by the game itself)
-  window.__game = { wild, followers, foxes, cats, camera, penguin, collectBoba, spawnFox, spawnCat };
+  window.__game = {
+    wild, followers, foxes, cats, camera, penguin, collectBoba, spawnFox, spawnCat,
+    get cine() { return cine; },
+  };
 
   // ---------- main loop ----------
   const clock = new THREE.Clock();
   const moveDir = new THREE.Vector3();
-  const camTarget = new THREE.Vector3();
+  const camPosT = new THREE.Vector3();
+  const camLookT = new THREE.Vector3();
+  const camLook = new THREE.Vector3().copy(WORLD.SPAWN_POS);
 
   function tick() {
     requestAnimationFrame(tick);
     const dt = Math.min(clock.getDelta(), 0.05);
 
-    // --- input ---
-    let mx = joystick.value.x;
-    let mz = joystick.value.y;
-    if (!joystick.active) {
-      mx = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
-      mz = (keys.KeyS || keys.ArrowDown ? 1 : 0) - (keys.KeyW || keys.ArrowUp ? 1 : 0);
+    // --- input (player, or the finale cinematic driving the penguin) ---
+    let amount;
+    if (cine) {
+      updateCinematic(dt);
+      moveDir.copy(cineMove);
+      amount = cineAmount;
+    } else {
+      let mx = joystick.value.x;
+      let mz = joystick.value.y;
+      if (!joystick.active) {
+        mx = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
+        mz = (keys.KeyS || keys.ArrowDown ? 1 : 0) - (keys.KeyW || keys.ArrowUp ? 1 : 0);
+      }
+      moveDir.set(mx, 0, mz);
+      amount = Math.min(moveDir.length(), 1);
+      if (won) amount = 0;
     }
-    moveDir.set(mx, 0, mz);
-    let amount = Math.min(moveDir.length(), 1);
-    if (won) amount = 0;
     if (amount > 0.01) {
       moveDir.normalize();
       const p = penguin.group.position;
@@ -320,10 +470,23 @@ export function startGame() {
     collide(penguin.group.position, 0.75);
     penguin.update(dt, amount, moveDir);
 
-    // --- camera follow ---
-    camTarget.copy(penguin.group.position).add(CAM_OFFSET);
-    camera.position.lerp(camTarget, 1 - Math.exp(-6 * dt));
-    camera.lookAt(penguin.group.position.x, 1, penguin.group.position.z);
+    // --- camera: follow normally, or frame the house facade for the finale ---
+    if (cine) {
+      if (cine.phase === 'walk' || cine.phase === 'door' || cine.phase === 'bobas') {
+        camPosT.set(6.5, 9, 3.5);       // out front, framing door + flock
+        camLookT.set(0, 1.2, -7.5);
+      } else {
+        camPosT.set(1.4, 4.8, 5.0);     // head-on: the couple in profile
+        camLookT.set(1.4, 1.4, -3.4);
+      }
+    } else {
+      camPosT.copy(penguin.group.position).add(CAM_OFFSET);
+      camLookT.set(penguin.group.position.x, 1, penguin.group.position.z);
+    }
+    const camDamp = 1 - Math.exp(-(cine ? 2.2 : 6) * dt);
+    camera.position.lerp(camPosT, camDamp);
+    camLook.lerp(camLookT, camDamp);
+    camera.lookAt(camLook);
 
     // --- creatures ---
     const ctx = {
@@ -333,6 +496,7 @@ export function startGame() {
     };
     for (const boba of wild) boba.update(dt, ctx);
     for (const boba of followers) boba.update(dt, ctx);
+    if (cine) for (const boba of cine.entering) boba.update(dt, ctx);
     for (let i = foxes.length - 1; i >= 0; i--) {
       foxes[i].update(dt, ctx);
       if (foxes[i].dead) {
@@ -365,7 +529,7 @@ export function startGame() {
     }
 
     // --- spawning ---
-    if (!won && followers.length < goal && wild.length < WILD_TARGET) {
+    if (!won && !cine && followers.length < goal && wild.length < WILD_TARGET) {
       bobaSpawnT -= dt;
       if (bobaSpawnT <= 0) {
         bobaSpawnT = 2 + Math.random() * 2;
@@ -373,7 +537,7 @@ export function startGame() {
       }
     }
     // up to 3 foxes at once; they spawn faster the bigger your flock gets
-    if (!won && followers.length >= 3 && foxes.length < 3) {
+    if (!won && !cine && followers.length >= 3 && foxes.length < 3) {
       foxSpawnT -= dt;
       if (foxSpawnT <= 0) {
         foxSpawnT = (10 + Math.random() * 8) * (12 / (12 + followers.length));
@@ -383,7 +547,7 @@ export function startGame() {
 
     // a rare visitor: at most one cat at a time, with a long random pause
     // after the previous one disappears
-    if (!won && cats.length === 0) {
+    if (!won && !cine && cats.length === 0) {
       catSpawnT -= dt;
       if (catSpawnT <= 0) {
         catSpawnT = 50 + Math.random() * 50;
@@ -424,20 +588,22 @@ export function startGame() {
         nearestFox = fox;
       }
     }
-    compass.update(
-      penguin.group.position,
-      {
-        boba: followers.length >= goal ? null : nearestWild && nearestWild.pos,
-        fox: nearestFox && nearestFox.pos,
-        house: WORLD.HOUSE_POS,
-      },
-      followers.length >= goal
-    );
+    if (!cine) {
+      compass.update(
+        penguin.group.position,
+        {
+          boba: followers.length >= goal ? null : nearestWild && nearestWild.pos,
+          fox: nearestFox && nearestFox.pos,
+          house: WORLD.HOUSE_POS,
+        },
+        followers.length >= goal
+      );
+    }
 
-    // --- win check ---
-    if (!won && followers.length >= goal &&
+    // --- finale check ---
+    if (!won && !cine && followers.length >= goal &&
         distXZ(penguin.group.position, WORLD.HOUSE_POS) < WORLD.HOUSE_RADIUS) {
-      win();
+      startCinematic();
     }
 
     renderer.render(scene, camera);

@@ -128,9 +128,16 @@ function buildHouse(scene) {
   for (let i = 0; i < 4; i++) {
     house.add(box(11 - i * 2.4, 1.1, 9 - i * 2, '#d3589b', { pos: [0, 5.5 + i * 1.05, 0] }));
   }
-  // door + windows on the front (+Z)
-  house.add(box(2, 3.2, 0.35, '#7a4f2b', { pos: [0, 1.6, 3.45], cast: false }));
-  house.add(box(0.3, 0.3, 0.2, '#ffd97a', { pos: [0.6, 1.7, 3.65], cast: false }));
+  // doorway: a dark "interior" panel sits proud of the solid wall (voxel
+  // trick — the wall has no real hole), with the door hinged in front of it
+  // so it can swing OUTWARD and reveal the darkness
+  house.add(box(2.3, 3.5, 0.12, '#190f13', { pos: [0, 1.75, 3.52], cast: false }));
+  const doorPivot = new THREE.Group();
+  doorPivot.position.set(-1, 0, 3.64); // hinge on the left edge of the doorway
+  doorPivot.add(box(2, 3.2, 0.16, '#7a4f2b', { pos: [1, 1.6, 0], cast: false }));
+  doorPivot.add(box(0.3, 0.3, 0.18, '#ffd97a', { pos: [1.6, 1.7, 0.1], cast: false }));
+  house.add(doorPivot);
+  // windows on the front (+Z)
   house.add(box(1.7, 1.7, 0.35, '#bfe8ff', { pos: [-2.8, 2.8, 3.45], cast: false }));
   house.add(box(1.7, 1.7, 0.35, '#bfe8ff', { pos: [2.8, 2.8, 3.45], cast: false }));
   // little chimney with a heart-pink top
@@ -158,6 +165,7 @@ function buildHouse(scene) {
     hx: 4.7,
     hz: 3.7,
   });
+  return doorPivot;
 }
 
 export function buildWorld(scene) {
@@ -213,5 +221,5 @@ export function buildWorld(scene) {
     scene.add(box(s, s * 0.7, s, '#9aa0a6', { pos: [x, s * 0.34, z] }));
   }
 
-  buildHouse(scene);
+  return { doorPivot: buildHouse(scene) };
 }
