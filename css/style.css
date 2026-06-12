@@ -136,18 +136,19 @@ html, body {
 .envelope.revealed .letter-content { opacity: 1; }
 
 #letter-title {
-  font-family: 'Dancing Script', cursive;
-  font-size: clamp(18px, 5vw, 27px);
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(12px, 3.2vw, 17px);
+  line-height: 1.5;
   color: #c2425c;
   /* auto top margin (+ bottom auto on the button) = safe vertical centering */
-  margin: auto 0 6px;
+  margin: auto 0 12px;
 }
 #letter-message {
-  font-family: 'Dancing Script', cursive;
-  font-size: clamp(13px, 3.4vw, 17px);
-  line-height: 1.45;
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(8px, 2.2vw, 9px);
+  line-height: 1.9;
   color: #5c4632;
-  margin: 0 0 10px;
+  margin: 0 0 14px;
   white-space: pre-line;
 }
 #gift-btn {
@@ -481,9 +482,9 @@ html, body {
   line-height: 1.5;
 }
 #win-message {
-  font-family: 'Dancing Script', cursive;
-  font-size: clamp(16px, 4.2vw, 22px);
-  line-height: 1.5;
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(8px, 2.4vw, 11px);
+  line-height: 1.9;
   color: #5c4632;
   margin: 0 0 22px;
   white-space: pre-line;
