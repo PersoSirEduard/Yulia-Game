@@ -50,7 +50,7 @@ export function startGame() {
 
   const { doorPivot } = buildWorld(scene);
 
-  const penguin = createPenguin();
+  const penguin = createPenguin({ bow: true });
   penguin.group.position.copy(WORLD.SPAWN_POS);
   scene.add(penguin.group);
   camera.position.copy(penguin.group.position).add(CAM_OFFSET);
@@ -363,7 +363,7 @@ export function startGame() {
       if (!cine.queue.length && !cine.entering.length) {
         cine.phase = 'partner';
         cine.t = 0;
-        cine.partner = createPenguin({ bow: true });
+        cine.partner = createPenguin();
         cine.partner.group.scale.setScalar(0.95);
         cine.partner.group.position.copy(DOOR_INSIDE);
         cine.partner.group.rotation.y = 0; // facing +Z, out the door
