@@ -99,9 +99,11 @@ export class Boba {
       if (d > 2.1) {
         // smooth arrival: speed ramps from 0 at the inner radius, so bobas
         // on the crowd's edge settle against separation instead of
-        // oscillating in and out (which made them spin in place)
-        const ramp = Math.min(1, (d - 2.1) / 3);
-        const speed = (d > 16 ? 13 : 6.8) * ramp;
+        // oscillating in and out (which made them spin in place). The ramp
+        // is short and cruise speed near the penguin's, so they stay close
+        // while running.
+        const ramp = Math.min(1, (d - 2.1) / 1.2);
+        const speed = (d > 10 ? 13 : 7.4) * ramp;
         desired.copy(_v1.normalize().multiplyScalar(speed));
       }
       for (const other of ctx.followers) {
