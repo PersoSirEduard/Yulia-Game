@@ -1,7 +1,7 @@
 // A Minecraft-style fox that sneaks in from the edge of the map and hunts
 // bobas. Tap it to scare it off the map. Model faces +Z.
 
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.min.js';
 import { box, hitSphere } from './voxel.js';
 import { WORLD, collide } from './world.js';
 

@@ -2,7 +2,7 @@
 // the penguin; when a fox gets too close to a boba he pounces, chases the fox
 // off the map and disappears with it. One defense per cat. Model faces +Z.
 
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.min.js';
 import { box, hitSphere } from './voxel.js';
 import { WORLD, collide } from './world.js';
 

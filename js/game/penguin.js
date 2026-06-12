@@ -1,6 +1,6 @@
 // The player: a Pingu-inspired voxel penguin. Model faces +Z.
 
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.min.js';
 import { box, hitSphere } from './voxel.js';
 
 export function createPenguin(opts = {}) {

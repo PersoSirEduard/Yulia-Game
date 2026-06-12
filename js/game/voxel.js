@@ -1,7 +1,7 @@
 // Tiny helper for building voxel-style models out of boxes,
 // with shared geometries/materials so 50+ chicks stay cheap.
 
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.min.js';
 
 const geoCache = new Map();
 const matCache = new Map();

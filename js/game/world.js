@@ -1,6 +1,6 @@
 // The voxel island: grass, trees, flowers, fence and the pink Boba Farm house.
 
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.min.js';
 import { CONFIG } from '../config.js';
 import { box } from './voxel.js';
 

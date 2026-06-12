@@ -1,7 +1,7 @@
 // A "boba": a Minecraft-style baby chick. Wild ones wander and peck;
 // collected ones follow the penguin in a little boid flock. Model faces +Z.
 
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.min.js';
 import { box, hitSphere } from './voxel.js';
 import { WORLD, collide } from './world.js';
 

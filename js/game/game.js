@@ -1,7 +1,7 @@
 // Stage 2: the 3D voxel game. Collect 50 bobas, fend off foxes,
 // bring the flock home to the Boba Farm.
 
-import * as THREE from 'three';
+import * as THREE from '../../vendor/three.module.min.js';
 import { CONFIG } from '../config.js';
 import { startHearts } from '../hearts.js';
 import { WORLD, buildWorld, collide } from './world.js';
