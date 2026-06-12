@@ -97,7 +97,11 @@ export class Boba {
       const d = _v1.length();
       const desired = _v2.set(0, 0, 0);
       if (d > 2.1) {
-        const speed = d > 16 ? 13 : 6.8;
+        // smooth arrival: speed ramps from 0 at the inner radius, so bobas
+        // on the crowd's edge settle against separation instead of
+        // oscillating in and out (which made them spin in place)
+        const ramp = Math.min(1, (d - 2.1) / 3);
+        const speed = (d > 16 ? 13 : 6.8) * ramp;
         desired.copy(_v1.normalize().multiplyScalar(speed));
       }
       for (const other of ctx.followers) {
@@ -106,9 +110,12 @@ export class Boba {
         const dz = pos.z - other.pos.z;
         const dd = dx * dx + dz * dz;
         if (dd > 0.0001 && dd < 1.21) {
-          const inv = 1 / Math.sqrt(dd);
-          desired.x += dx * inv * 2.8;
-          desired.z += dz * inv * 2.8;
+          // push fades to zero at the edge of the radius so a settled flock
+          // stops shoving (and re-aiming) when the player stands still
+          const dist = Math.sqrt(dd);
+          const push = ((1.1 - dist) * 5.5) / dist;
+          desired.x += dx * push;
+          desired.z += dz * push;
         }
       }
       this.vel.lerp(desired, 1 - Math.exp(-5 * dt));
@@ -120,9 +127,10 @@ export class Boba {
     pos.z = THREE.MathUtils.clamp(pos.z, -WORLD.BOUND, WORLD.BOUND);
     if (this.state !== 'entering') collide(pos, 0.3);
 
-    // hop + face direction of travel
+    // hop + face direction of travel (only above a real walking speed, so
+    // residual micro-velocities don't twitch the rotation)
     const speed = Math.hypot(this.vel.x, this.vel.z);
-    if (speed > 0.2) {
+    if (speed > 0.7) {
       this.phase += dt * (5 + speed * 2.2);
       pos.y = Math.abs(Math.sin(this.phase)) * 0.16;
       const yaw = Math.atan2(this.vel.x, this.vel.z);
