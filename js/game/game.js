@@ -8,6 +8,7 @@ import { WORLD, buildWorld, collide } from './world.js';
 import { createPenguin } from './penguin.js';
 import { Boba } from './boba.js';
 import { Fox } from './fox.js';
+import { Cat } from './cat.js';
 import { Joystick } from './joystick.js';
 import { Compass } from './compass.js';
 import { sfx } from './audio.js';
@@ -60,11 +61,14 @@ export function startGame() {
   const wild = [];
   const followers = [];
   const foxes = [];
+  const cats = [];
   const burstHearts = [];
   let bobaSpawnT = 2;
   let foxSpawnT = 14;
+  let catSpawnT = 25 + Math.random() * 25;
   let goalAnnounced = false;
   let foxAnnounced = false;
+  let catAnnounced = false;
   let won = false;
 
   // ---------- HUD ----------
@@ -148,6 +152,12 @@ export function startGame() {
     }
   }
 
+  function spawnCat() {
+    const cat = new Cat(randomSpawnPos());
+    scene.add(cat.group);
+    cats.push(cat);
+  }
+
   // ---------- events: collect / eat / scare ----------
   function collectBoba(boba) {
     wild.splice(wild.indexOf(boba), 1);
@@ -201,6 +211,7 @@ export function startGame() {
       ...wild.map((b) => b.hit),
       ...followers.map((b) => b.hit),
       ...foxes.map((f) => f.hit),
+      ...cats.map((c) => c.hit),
       penguin.hit,
     ];
     const hits = raycaster.intersectObjects(targets, false);
@@ -212,6 +223,17 @@ export function startGame() {
     } else if (owner.isFox) {
       owner.scare(penguin.group.position);
       sfx.foxFlee();
+      heartBurst(owner.pos, 2);
+    } else if (owner.isCat && owner.state === 'sitting') {
+      owner.startFollowing();
+      sfx.meow();
+      heartBurst(owner.pos, 3);
+      if (!catAnnounced) {
+        catAnnounced = true;
+        showBanner(text('bannerCat'), 5500);
+      }
+    } else if (owner.isCat) {
+      sfx.meow();
       heartBurst(owner.pos, 2);
     } else if (owner.isBoba || owner.isPenguin) {
       sfx.chirp();
@@ -267,7 +289,7 @@ export function startGame() {
   });
 
   // debug/testing handle (not used by the game itself)
-  window.__game = { wild, followers, foxes, camera, penguin, collectBoba, spawnFox };
+  window.__game = { wild, followers, foxes, cats, camera, penguin, collectBoba, spawnFox, spawnCat };
 
   // ---------- main loop ----------
   const clock = new THREE.Clock();
@@ -318,6 +340,29 @@ export function startGame() {
         foxes.splice(i, 1);
       }
     }
+    for (let i = cats.length - 1; i >= 0; i--) {
+      cats[i].update(dt, ctx);
+      if (cats[i].dead) {
+        scene.remove(cats[i].group);
+        cats.splice(i, 1);
+      }
+    }
+
+    // --- Theo on guard: pounce when a hunting fox is about to reach a boba ---
+    const guard = cats.find((c) => c.state === 'following');
+    if (guard) {
+      for (const fox of foxes) {
+        if (fox.state !== 'hunt' || !fox.target) continue;
+        if (distXZ(fox.pos, fox.target.pos) < 3.2) {
+          fox.scare(guard.pos);   // flees away from the cat
+          guard.defend(fox);      // and the cat runs it off the map
+          sfx.meow();
+          sfx.foxFlee();
+          heartBurst(guard.pos, 3);
+          break;                  // one defense per cat
+        }
+      }
+    }
 
     // --- spawning ---
     if (!won && followers.length < goal && wild.length < WILD_TARGET) {
@@ -333,6 +378,16 @@ export function startGame() {
       if (foxSpawnT <= 0) {
         foxSpawnT = (10 + Math.random() * 8) * (12 / (12 + followers.length));
         spawnFox();
+      }
+    }
+
+    // a rare visitor: at most one cat at a time, with a long random pause
+    // after the previous one disappears
+    if (!won && cats.length === 0) {
+      catSpawnT -= dt;
+      if (catSpawnT <= 0) {
+        catSpawnT = 50 + Math.random() * 50;
+        spawnCat();
       }
     }
 

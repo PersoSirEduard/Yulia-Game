@@ -11,7 +11,10 @@ A two-stage gift game for web and mobile (touch + mouse):
    and run from you, but you're faster. Collected bobas follow you around as a
    little boid flock. **Foxes** (up to 3 at once, spawning faster the bigger
    your flock) sneak in from the edges of the map to hunt your flock, and only
-   retreat when you tap them or your flock is gone. Once you
+   retreat when you tap them or your flock is gone. Rarely, **Theo the
+   Siamese cat** appears sitting somewhere on the map (no compass marker —
+   he's a secret): tap him and he follows you, then pounces on the next fox
+   that gets too close and chases it off the map. Once you
    have all 50, bring the flock back to the pink **Boba Farm** house at the
    spawn point to win. A compass around the middle of the screen points to the
    nearest wild boba 🐤, the nearest fox 🦊⚠️ and the farm 🏠, with distances.

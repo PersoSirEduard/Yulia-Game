@@ -45,6 +45,10 @@ class Sfx {
   goal() {
     [659, 784, 988].forEach((f, i) => this.tone(f, 0.12, { delay: i * 0.1 }));
   }
+  meow() {
+    this.tone(820, 0.14, { type: 'triangle', slideTo: 1250, vol: 0.13 });
+    this.tone(1250, 0.22, { type: 'triangle', slideTo: 650, vol: 0.1, delay: 0.13 });
+  }
   win() {
     [523, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, 0.18, { delay: i * 0.13, vol: 0.14 }));
   }
